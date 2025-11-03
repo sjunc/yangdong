@@ -96,3 +96,141 @@ DB 이름은 반드시 dmu
 SQL 불러오기 전에 DB가 생성돼 있어야 함
 
 dmu.sql 파일은 최신 버전을 공유해서 동일하게 맞출 것
+
+좋아요! 그러면 아까 만든 체크리스트를 깔끔하게 **README.md** 형태로 정리해드릴게요. 바로 깃허브에 올려서 처음 보는 사람도 따라 할 수 있도록 할 수 있습니다.
+
+---
+
+````markdown
+# Yangdong Project
+
+> FastAPI 기반 RAG + TTS 프로젝트 실행 가이드
+
+---
+
+## 1. 환경 준비
+
+### 1.1 Miniconda 설치
+[Miniconda 설치 링크](https://docs.conda.io/en/latest/miniconda.html)에서 OS에 맞는 버전 설치
+
+### 1.2 환경 생성 및 활성화
+```bash
+cd <프로젝트_폴더>
+conda create -n rag python=3.11 -y
+conda activate rag
+````
+
+### 1.3 패키지 설치
+
+```bash
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+pip install -r requirements.txt
+pip install faster-whisper mysql-connector-python uvicorn
+```
+
+---
+
+## 2. Git 초기화 및 충돌 해결
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/USERNAME/REPO.git
+git pull origin main --allow-unrelated-histories
+git push -u origin main
+```
+
+> ⚠️ 이미 원격에 파일이 있으면 `pull` 후 충돌 해결 필요
+
+---
+
+## 3. Git 머지 마커 제거
+
+충돌 마커(`<<<<<<< HEAD`) 확인:
+
+```bash
+findstr /s /n "<<<<<<<" *.py
+```
+
+발견 시 삭제 후 코드 수정
+
+---
+
+## 4. OpenMP 라이브러리 충돌 해결
+
+```bash
+set KMP_DUPLICATE_LIB_OK=TRUE
+```
+
+혹은 코드 내:
+
+```python
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+```
+
+---
+
+## 5. FastAPI 서버 실행 전 확인
+
+1. 필수 모듈 설치
+
+```bash
+pip install faster-whisper mysql-connector-python uvicorn
+```
+
+2. DB 연결 확인 (`mysql.connector` 사용)
+
+   * MySQL 서버 실행
+   * `.env` 또는 `config.py` 확인
+
+---
+
+## 6. 서버 실행
+
+```bash
+uvicorn app:app --reload
+```
+
+* 기본 주소: `http://127.0.0.1:9000`
+
+---
+
+## 7. 주요 오류와 해결
+
+| 오류                       | 원인              | 해결 방법                                |
+| ------------------------ | --------------- | ------------------------------------ |
+| 401 Unauthorized         | 인증 토큰 없음        | 테스트 계정 생성 / 헤더에 토큰 추가                |
+| 404 Not Found            | 요청 URL에 파일 없음   | `feature.html` 경로 확인, `static` 경로 설정 |
+| 502 Bad Gateway          | 백엔드 처리 실패       | 모델 서버 실행 확인, 로그 확인                   |
+| 422 Unprocessable Entity | 요청 데이터 구조 오류    | FastAPI Pydantic 모델 확인, 필드 누락 여부 확인  |
+| ModuleNotFoundError      | 패키지 설치 안 됨      | `pip install 패키지명`                   |
+| OMP Error                | OpenMP 라이브러리 중복 | `set KMP_DUPLICATE_LIB_OK=TRUE`      |
+
+---
+
+## 8. 테스트
+
+### RAG 챗 테스트
+
+```bash
+curl -X POST "http://127.0.0.1:9000/rag/chat" \
+-H "Content-Type: application/json" \
+-d "{\"question\": \"안녕하세요\"}"
+```
+
+### TTS 테스트
+
+```bash
+curl -X POST "http://127.0.0.1:9000/tts" \
+-H "Content-Type: application/json" \
+-d "{\"text\": \"안녕하세요\"}"
+```
+
+> 출력이 정상적으로 나오면 서버 준비 완료
+
+```
+
+
